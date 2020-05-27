@@ -2,6 +2,8 @@ package com.zensolution.jdbc.parquet;
 
 import com.zensolution.jdbc.parquet.internal.Versions;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -41,14 +43,35 @@ public class ParquetDriver implements Driver {
         }
 
         // get filepath from url
-        String filePath = url.substring(URL_PREFIX.length());
-        LOGGER.log(Level.FINE, "ParquetDriver:connect() - filePath=" + filePath);
-        return new ParquetConnection(filePath, info);
+        String urlProperties = url.substring(URL_PREFIX.length());
+        int questionIndex = urlProperties.indexOf('?');
+        String path = questionIndex >= 0 ? urlProperties.substring(0, questionIndex) : urlProperties;
+        if (questionIndex >= 0) {
+            Properties prop = parseUrlIno(urlProperties.substring(questionIndex+1));
+            info.putAll(prop);
+        }
+        LOGGER.log(Level.FINE, "ParquetDriver:connect() - filePath=" + path);
+        return new ParquetConnection(path, info);
     }
 
-    private Properties parseUrlIno(String propertyStr) {
-        //Arrays.stream(propertyStr.split("&")).map();
-        return new Properties();
+    private Properties parseUrlIno(String urlProperties) throws SQLException {
+        Properties info = new Properties();
+        String[] split = urlProperties.split("&");
+        for (int i = 0; i < split.length; i++) {
+            String[] property = split[i].split("=");
+            try {
+                if (property.length == 2) {
+                    String key = URLDecoder.decode(property[0], "UTF-8");
+                    String value = URLDecoder.decode(property[1], "UTF-8");
+                    info.setProperty(key, value);
+                } else {
+                    throw new SQLException("invalid Property: " + split[i]);
+                }
+            } catch (UnsupportedEncodingException e) {
+                // we know UTF-8 is available
+            }
+        }
+        return info;
     }
 
     @Override

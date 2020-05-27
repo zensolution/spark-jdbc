@@ -29,7 +29,7 @@ public class ParquetStatement implements Statement {
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
         try {
-            new SparkService().parquet(connection.getPath(), sql);
+            new SparkService().parquet(connection.getConnectionInfo().getPath(), sql);
         } catch (Exception e) {
             throw new SQLException(e);
         }
