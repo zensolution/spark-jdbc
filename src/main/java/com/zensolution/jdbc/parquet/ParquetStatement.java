@@ -1,5 +1,6 @@
 package com.zensolution.jdbc.parquet;
 
+import com.zensolution.jdbc.parquet.internal.ConnectionInfo;
 import com.zensolution.jdbc.parquet.spark.SparkService;
 import org.apache.spark.sql.catalyst.parser.ParseException;
 
@@ -8,8 +9,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class ParquetStatement implements Statement {
 
@@ -29,7 +33,23 @@ public class ParquetStatement implements Statement {
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
         try {
-            new SparkService().parquet(connection.getConnectionInfo().getPath(), sql);
+            SparkService spark = new SparkService();
+            ConnectionInfo connectionInfo = connection.getConnectionInfo();
+            Map<String, String> options = connectionInfo.getProperties().entrySet().stream().collect(
+                    Collectors.toMap(
+                            e -> e.getKey().toString(),
+                            e -> e.getValue().toString()
+                    )
+            );
+            switch (connectionInfo.getFormat()) {
+                case PARQUET:
+                case CSV:
+                    spark.file(connectionInfo, sql, options);
+                    break;
+                default:
+                    break;
+            }
+
         } catch (Exception e) {
             throw new SQLException(e);
         }
