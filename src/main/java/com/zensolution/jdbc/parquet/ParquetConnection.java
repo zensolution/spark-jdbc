@@ -1,5 +1,6 @@
 package com.zensolution.jdbc.parquet;
 
+import com.zensolution.jdbc.parquet.internal.ConnectionInfo;
 import com.zensolution.jdbc.parquet.spark.SparkService;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
@@ -31,7 +32,7 @@ public class ParquetConnection implements Connection {
     /**
      * Directory where the Parquet files to use are located
      */
-    private String path;
+    private ConnectionInfo connectionInfo;
 
     /**
      * Directory where the Parquet files to use are located
@@ -63,13 +64,12 @@ public class ParquetConnection implements Connection {
         if (path == null || path.length() == 0) {
             throw new IllegalArgumentException("Unknown Path");
         }
-        this.path = path;
+        this.connectionInfo = new ConnectionInfo(path, info);
         this.info = info;
-        //init(path);
     }
 
-    public String getPath() {
-        return path;
+    public ConnectionInfo getConnectionInfo() {
+        return connectionInfo;
     }
 
     @Override
@@ -357,6 +357,6 @@ public class ParquetConnection implements Connection {
     }
 
     protected String getURL() {
-        return ParquetDriver.URL_PREFIX + path;
+        return ParquetDriver.URL_PREFIX + connectionInfo.getPath();
     }
 }
