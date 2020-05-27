@@ -1,5 +1,6 @@
 package com.zensolution.jdbc.parquet.spark;
 
+import com.zensolution.jdbc.parquet.internal.ConnectionInfo;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
@@ -8,6 +9,7 @@ import org.apache.spark.sql.catalyst.parser.ParseException;
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,11 +25,12 @@ public class SparkService {
         return spark.sql(sqlText);
     }
 
-    public void parquet(String path, String sqlText) throws ParseException {
+    public void file(ConnectionInfo info, String sqlText, Map<String, String> options) throws ParseException {
         SparkSession spark = buildSparkSession();
         Set<String> tables = getRelations(spark.sessionState().sqlParser().parsePlan(sqlText));
         tables.forEach(table -> {
-            Dataset<Row> ds = spark.read().parquet(new File(path, table).getAbsolutePath());
+            Dataset<Row> ds = spark.read().format(info.getFormat().name())
+                    .options(options).load(new File(info.getPath(), table).getAbsolutePath());
             ds.createOrReplaceTempView(table);
         });
     }
@@ -39,7 +42,6 @@ public class SparkService {
                     if (logicalPlan instanceof UnresolvedRelation) {
                         return ((UnresolvedRelation) logicalPlan).tableName();
                     }
-
                     return "";
                 }).collect(Collectors.toSet());
     }
