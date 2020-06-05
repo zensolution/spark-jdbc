@@ -1,6 +1,6 @@
-package com.zensolution.jdbc.parquet;
+package com.zensolution.jdbc.spark;
 
-import com.zensolution.jdbc.parquet.internal.Versions;
+import com.zensolution.jdbc.spark.internal.Versions;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -14,27 +14,26 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ParquetDriver implements Driver {
+public class SparkDriver implements Driver {
 
-    private static final Logger LOGGER = Logger.getLogger("com.zensolution.jdbc.parquet.ParquetDriver");
+    private static final Logger LOGGER = Logger.getLogger("com.zensolution.jdbc.spark");
 
-    public final static String URL_PREFIX = "com.zensolution.jdbc.parquet:";
+    public final static String URL_PREFIX = "com.zensolution.jdbc.spark:";
 
     static {
         try {
             register();
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Unable to register com.zensolution.jdbc.parquet JDBC driver", e);
+            LOGGER.log(Level.WARNING, "Unable to register com.zensolution.jdbc.spark JDBC driver", e);
         }
     }
 
     public static synchronized void register() throws SQLException {
-        DriverManager.registerDriver(new ParquetDriver());
+        DriverManager.registerDriver(new SparkDriver());
     }
 
     @Override
     public Connection connect(String url, Properties info) throws SQLException {
-
         if (info == null) {
             info = new Properties();
         }
@@ -50,8 +49,8 @@ public class ParquetDriver implements Driver {
             Properties prop = parseUrlIno(urlProperties.substring(questionIndex+1));
             info.putAll(prop);
         }
-        LOGGER.log(Level.FINE, "ParquetDriver:connect() - filePath=" + path);
-        return new ParquetConnection(path, info);
+        LOGGER.log(Level.FINE, "SparkDriver:connect() - filePath=" + path);
+        return new SparkConnection(path, info);
     }
 
     private Properties parseUrlIno(String urlProperties) throws SQLException {

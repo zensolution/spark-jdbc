@@ -1,4 +1,4 @@
-package com.zensolution.jdbc.parquet;
+package com.zensolution.jdbc.spark;
 
 import org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils;
 import org.apache.spark.sql.types.StructField;
@@ -9,11 +9,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ParquetResultSetMetaData implements ResultSetMetaData {
+public class SparkResultSetMetaData implements ResultSetMetaData {
 
     private List<StructField> structFields = new ArrayList<>();
 
-    public ParquetResultSetMetaData(StructType structType) {
+    public SparkResultSetMetaData(StructType structType) {
         for (int i=0; i<structType.fields().length; i++) {
             this.structFields.add(structType.fields()[i]);
         }

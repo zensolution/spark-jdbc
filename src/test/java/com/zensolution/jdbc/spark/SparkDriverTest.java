@@ -1,8 +1,8 @@
-package com.zensolution.jdbc.parquet;
+package com.zensolution.jdbc.spark;
 
 import org.junit.jupiter.api.Test;
 
-public class ParquetDriverTest {
+public class SparkDriverTest {
 
     @Test
     public void testParserInfo() {

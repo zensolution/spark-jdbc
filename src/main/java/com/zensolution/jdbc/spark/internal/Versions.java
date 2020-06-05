@@ -1,4 +1,4 @@
-package com.zensolution.jdbc.parquet.internal;
+package com.zensolution.jdbc.spark.internal;
 
 public final class Versions {
     private Versions() {}
