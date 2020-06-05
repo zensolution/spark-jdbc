@@ -1,9 +1,12 @@
-package com.zensolution.jdbc.parquet;
+package com.zensolution.jdbc.spark;
 
-import com.zensolution.jdbc.parquet.spark.SparkService;
+import com.zensolution.jdbc.spark.internal.ConnectionInfo;
+import com.zensolution.jdbc.spark.internal.SparkService;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.catalyst.parser.ParseException;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
@@ -28,7 +31,7 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Map;
 
-public class ParquetResultSet implements ResultSet {
+public class SparkResultSet implements ResultSet {
 
     /**
      * Result of last call to next()
@@ -40,17 +43,22 @@ public class ParquetResultSet implements ResultSet {
     /**
      * Metadata for this ResultSet
      */
-    private ParquetResultSetMetaData resultSetMetaData;
+    private SparkResultSetMetaData resultSetMetaData;
 
     private Iterator<Row> dataListIterator;
     private Row current;
+    private int count = 0;
 
-    protected ParquetResultSet(String sqlText) {
-        Dataset<Row> ds = new SparkService().executeQuery(sqlText);
-        resultSetMetaData = new ParquetResultSetMetaData(ds.schema());
+    protected SparkResultSet(ConnectionInfo connectionInfo, String sqlText) throws ParseException {
+        Dataset<Row> ds = new SparkService().executeQuery(connectionInfo, sqlText);
+        resultSetMetaData = new SparkResultSetMetaData(ds.schema());
+        count = (int)ds.count();
         this.dataListIterator = ds.toLocalIterator();
     }
 
+    public int getCount() {
+        return count;
+    }
     @Override
     public boolean next() throws SQLException {
         checkOpen();
@@ -65,11 +73,11 @@ public class ParquetResultSet implements ResultSet {
     @Override
     public void close() throws SQLException {
         this.isClosed = true;
-   }
+    }
 
     @Override
     public boolean wasNull() throws SQLException {
-        throw new UnsupportedOperationException();
+        return false;
     }
 
     @Override
@@ -94,7 +102,7 @@ public class ParquetResultSet implements ResultSet {
     public short getShort(int columnIndex) throws SQLException {
         checkOpen();
         return current.getShort(columnIndex-1);
-   }
+    }
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
@@ -121,6 +129,7 @@ public class ParquetResultSet implements ResultSet {
     }
 
     @Override
+    @Deprecated
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
         checkOpen();
         return current.getDecimal(columnIndex-1).setScale(scale);
@@ -155,18 +164,26 @@ public class ParquetResultSet implements ResultSet {
 
     @Override
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
-        throw new UnsupportedOperationException();
+        String s = getString(columnIndex);
+        if (s != null) {
+            return parseAsciiStream(s);
+        }
+        return null;
+    }
 
+    private InputStream parseAsciiStream(String str) {
+        return (str == null) ? null : new ByteArrayInputStream(str.getBytes());
     }
 
     @Override
+    @Deprecated
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
-        throw new UnsupportedOperationException();
+        return getAsciiStream(columnIndex);
     }
 
     @Override
     public InputStream getBinaryStream(int columnIndex) throws SQLException {
-        throw new UnsupportedOperationException();
+        return getAsciiStream(columnIndex);
     }
 
     @Override
@@ -218,6 +235,7 @@ public class ParquetResultSet implements ResultSet {
     }
 
     @Override
+    @Deprecated
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
         checkOpen();
         return getBigDecimal(findColumn(columnLabel));
@@ -249,17 +267,18 @@ public class ParquetResultSet implements ResultSet {
 
     @Override
     public InputStream getAsciiStream(String columnLabel) throws SQLException {
-        throw new UnsupportedOperationException();
+        return getAsciiStream(findColumn(columnLabel));
     }
 
     @Override
+    @Deprecated
     public InputStream getUnicodeStream(String columnLabel) throws SQLException {
-        throw new UnsupportedOperationException();
+        return getUnicodeStream(findColumn(columnLabel));
     }
 
     @Override
     public InputStream getBinaryStream(String columnLabel) throws SQLException {
-        throw new UnsupportedOperationException();
+        return getBinaryStream(findColumn(columnLabel));
     }
 
     @Override

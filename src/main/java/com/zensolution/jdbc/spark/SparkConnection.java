@@ -1,12 +1,8 @@
-package com.zensolution.jdbc.parquet;
+package com.zensolution.jdbc.spark;
 
-import com.zensolution.jdbc.parquet.internal.ConnectionInfo;
-import com.zensolution.jdbc.parquet.spark.SparkService;
-import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
+import com.zensolution.jdbc.spark.internal.ConnectionInfo;
 import org.apache.spark.sql.SparkSession;
 
-import java.io.File;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -28,7 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-public class ParquetConnection implements Connection {
+public class SparkConnection implements Connection {
     /**
      * Directory where the Parquet files to use are located
      */
@@ -47,7 +43,7 @@ public class ParquetConnection implements Connection {
     /**
      * Stores whether this Connection is closed or not
      */
-    private boolean closed;
+    private boolean closed = false;
 
     /**
      * Collection of all created Statements
@@ -59,7 +55,7 @@ public class ParquetConnection implements Connection {
      *
      * @param path directory where the Parquet files are located
      */
-    protected ParquetConnection(String path, Properties info) {
+    protected SparkConnection(String path, Properties info) {
         // validate argument(s)
         if (path == null || path.length() == 0) {
             throw new IllegalArgumentException("Unknown Path");
@@ -76,7 +72,7 @@ public class ParquetConnection implements Connection {
     public Statement createStatement() throws SQLException {
         checkOpen();
 
-        ParquetStatement statement = new ParquetStatement(this);
+        SparkStatement statement = new SparkStatement(this);
         statements.add(statement);
         return statement;
     }
@@ -98,7 +94,7 @@ public class ParquetConnection implements Connection {
 
     @Override
     public void setAutoCommit(boolean autoCommit) throws SQLException {
-        throw new UnsupportedOperationException();
+        //TODO
     }
 
     @Override
@@ -177,7 +173,8 @@ public class ParquetConnection implements Connection {
 
     @Override
     public Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        return new ParquetStatement(this);
+        //return new SparkStatement(this);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -357,6 +354,6 @@ public class ParquetConnection implements Connection {
     }
 
     protected String getURL() {
-        return ParquetDriver.URL_PREFIX + connectionInfo.getPath();
+        return SparkDriver.URL_PREFIX + connectionInfo.getPath();
     }
 }

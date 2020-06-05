@@ -1,6 +1,4 @@
-package com.zensolution.jdbc.parquet.internal;
-
-import scala.sys.Prop;
+package com.zensolution.jdbc.spark.internal;
 
 import java.util.Locale;
 import java.util.Properties;

@@ -1,7 +1,5 @@
-package com.zensolution.jdbc.parquet;
+package com.zensolution.jdbc.spark;
 
-import com.zensolution.jdbc.parquet.internal.ConnectionInfo;
-import com.zensolution.jdbc.parquet.spark.SparkService;
 import org.apache.spark.sql.catalyst.parser.ParseException;
 
 import java.sql.Connection;
@@ -9,51 +7,33 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-public class ParquetStatement implements Statement {
+public class SparkStatement implements Statement {
 
-    private static final Logger LOGGER = Logger.getLogger("com.zensolution.jdbc.parquet.ParquetDriver");
+    private static final Logger LOGGER = Logger.getLogger("com.nyiso.qa.emsbms.jdbc.spark.SparkDriver");
 
-    private ParquetConnection connection;
+    private SparkConnection connection;
     private int fetchSize = 1;
     private int fetchDirection = ResultSet.FETCH_FORWARD;
     private int maxRows = 0;
     private boolean closed;
+    private SparkResultSet resultSet;
 
-    protected ParquetStatement(ParquetConnection connection) {
-        LOGGER.log(Level.FINE, "ParquetDriver:connect() - connection=" + connection);
+    protected SparkStatement(SparkConnection connection) {
+        LOGGER.log(Level.FINE, "SparkDriver:connect() - connection=" + connection);
         this.connection = connection;
     }
 
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
         try {
-            SparkService spark = new SparkService();
-            ConnectionInfo connectionInfo = connection.getConnectionInfo();
-            Map<String, String> options = connectionInfo.getProperties().entrySet().stream().collect(
-                    Collectors.toMap(
-                            e -> e.getKey().toString(),
-                            e -> e.getValue().toString()
-                    )
-            );
-            switch (connectionInfo.getFormat()) {
-                case PARQUET:
-                case CSV:
-                    spark.file(connectionInfo, sql, options);
-                    break;
-                default:
-                    break;
-            }
-
+            resultSet = new SparkResultSet(connection.getConnectionInfo(), sql);
+            return resultSet;
         } catch (Exception e) {
             throw new SQLException(e);
         }
-        return new ParquetResultSet(sql);
     }
 
     @Override
@@ -63,7 +43,7 @@ public class ParquetStatement implements Statement {
 
     @Override
     public void close() throws SQLException {
-        throw new UnsupportedOperationException();
+        //TODO
     }
 
     @Override
@@ -124,17 +104,22 @@ public class ParquetStatement implements Statement {
 
     @Override
     public boolean execute(String sql) throws SQLException {
-        return false;
+        try {
+            resultSet = new SparkResultSet(connection.getConnectionInfo(), sql);
+        } catch (ParseException e) {
+            throw new SQLException(e);
+        }
+        return true;
     }
 
     @Override
     public ResultSet getResultSet() throws SQLException {
-        throw new UnsupportedOperationException();
+        return resultSet;
     }
 
     @Override
     public int getUpdateCount() throws SQLException {
-        throw new UnsupportedOperationException();
+        return resultSet.getCount();
     }
 
     @Override
@@ -154,7 +139,7 @@ public class ParquetStatement implements Statement {
 
     @Override
     public void setFetchSize(int rows) throws SQLException {
-
+        //TODO
     }
 
     @Override
