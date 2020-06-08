@@ -49,7 +49,7 @@ public class SparkDriver implements Driver {
             Properties prop = parseUrlIno(urlProperties.substring(questionIndex+1));
             info.putAll(prop);
         }
-        LOGGER.log(Level.FINE, "SparkDriver:connect() - filePath=" + path);
+        LOGGER.log(Level.FINE, "SparkDriver:connect() - Path=" + path);
         return new SparkConnection(path, info);
     }
 
@@ -75,7 +75,7 @@ public class SparkDriver implements Driver {
 
     @Override
     public boolean acceptsURL(String url) throws SQLException {
-        LOGGER.log(Level.FINE, "ParquetDriver:accept() - url=" + url);
+        LOGGER.log(Level.FINE, "SparkDriver:accept() - url=" + url);
         return url.startsWith(URL_PREFIX);
     }
 

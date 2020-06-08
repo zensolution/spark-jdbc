@@ -94,12 +94,12 @@ public class SparkStatement implements Statement {
 
     @Override
     public void clearWarnings() throws SQLException {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setCursorName(String name) throws SQLException {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override

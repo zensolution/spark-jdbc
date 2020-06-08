@@ -127,7 +127,7 @@ public class SparkConnection implements Connection {
 
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {
-        throw new UnsupportedOperationException();
+        return new SparkDatabaseMetaData(this);
     }
 
     @Override
@@ -319,7 +319,7 @@ public class SparkConnection implements Connection {
 
     @Override
     public String getSchema() throws SQLException {
-        throw new UnsupportedOperationException();
+        return "";
     }
 
     @Override
