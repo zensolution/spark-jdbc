@@ -2,25 +2,20 @@ package com.zensolution.jdbc.spark;
 
 import com.zensolution.jdbc.spark.internal.SparkService;
 import com.zensolution.jdbc.spark.internal.Versions;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.RowIdLifetime;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SparkDatabaseMetaData implements DatabaseMetaData {
 
+    private SparkService sparkService;
     private SparkConnection connection;
 
     public SparkDatabaseMetaData(SparkConnection connection) {
+        sparkService = new SparkService(connection.getConnectionInfo());
         this.connection = connection;
     }
 
@@ -626,7 +621,7 @@ public class SparkDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types) throws SQLException {
-        return new SparkResultSet(new SparkService().getTables(connection.getConnectionInfo()));
+        return new SparkResultSet(sparkService.getTables());
     }
 
     @Override
@@ -646,7 +641,7 @@ public class SparkDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
-        return new SparkResultSet(new SparkService().getColumns(connection.getConnectionInfo(), tableNamePattern));
+        return new SparkResultSet(sparkService.getColumns(tableNamePattern));
     }
 
     @Override
