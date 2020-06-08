@@ -56,6 +56,12 @@ public class SparkResultSet implements ResultSet {
         this.dataListIterator = ds.toLocalIterator();
     }
 
+    protected SparkResultSet(Dataset<Row> ds) {
+        resultSetMetaData = new SparkResultSetMetaData(ds.schema());
+        count = (int)ds.count();
+        this.dataListIterator = ds.toLocalIterator();
+    }
+
     public int getCount() {
         return count;
     }
