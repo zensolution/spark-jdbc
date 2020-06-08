@@ -23,31 +23,37 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SparkService {
-    protected SparkSession buildSparkSession(ConnectionInfo info) {
+    private ConnectionInfo connectionInfo;
+
+    public SparkService(ConnectionInfo info) {
+        this.connectionInfo = info;
+    }
+
+    protected SparkSession buildSparkSession() {
         final SparkSession.Builder builder = SparkSession.builder().master("local").appName("parquet-jdbc-driver")
                 .config("spark.sql.session.timeZone", "UTC");
-        getOptions(info.getProperties(), "spark").entrySet().stream()
+        getOptions(connectionInfo.getProperties(), "spark").entrySet().stream()
                 .filter(entry->entry.getKey().startsWith("spark."))
                 .forEach(entry-> builder.config(entry.getKey(), entry.getValue()));
         return builder.getOrCreate();
     }
 
-    public Dataset<Row> executeQuery(ConnectionInfo info, String sqlText) throws ParseException {
-        SparkSession spark = buildSparkSession(info);
-        prepareTempView(info, sqlText);
+    public Dataset<Row> executeQuery(String sqlText) throws ParseException {
+        SparkSession spark = buildSparkSession();
+        prepareTempView(sqlText);
         return spark.sql(sqlText);
     }
 
-    public void prepareTempView(ConnectionInfo info, String sqlText) throws ParseException {
-        Map<String, String> options = getOptions(info.getProperties(), info.getFormat().name());
+    public void prepareTempView(String sqlText) throws ParseException {
+        Map<String, String> options = getOptions(connectionInfo.getProperties(), connectionInfo.getFormat().name());
 
-        SparkSession spark = buildSparkSession(info);
+        SparkSession spark = buildSparkSession();
         Set<String> tables = getRelations(spark.sessionState().sqlParser().parsePlan(sqlText));
         tables.forEach(table -> {
-            SupportedFormat format = info.getFormat();
+            SupportedFormat format = connectionInfo.getFormat();
             Dataset<Row> ds = spark.read().format(format.name().toLowerCase(Locale.getDefault()))
                     .options(options)
-                    .load(format.getSparkPath(info.getPath(), table));
+                    .load(format.getSparkPath(connectionInfo.getPath(), table));
             ds.createOrReplaceTempView(table);
         });
     }
@@ -75,8 +81,8 @@ public class SparkService {
                 }).collect(Collectors.toSet());
     }
 
-    public Dataset<Row> getTables(ConnectionInfo info) {
-        List<Row> tables = Arrays.stream(buildSparkSession(info).sqlContext().tableNames())
+    public Dataset<Row> getTables() {
+        List<Row> tables = Arrays.stream(buildSparkSession().sqlContext().tableNames())
                 .map(table->RowFactory.create(table, "", "", ""))
                 .collect(Collectors.toList());
 
@@ -87,11 +93,11 @@ public class SparkService {
         listOfStructField.add(DataTypes.createStructField("TABLE_CAT", DataTypes.StringType, true));
 
         StructType structType=DataTypes.createStructType(listOfStructField);
-        return buildSparkSession(info).createDataFrame(tables, structType);
+        return buildSparkSession().createDataFrame(tables, structType);
     }
 
-    public Dataset<Row> getColumns(ConnectionInfo info, String table) {
-        StructField[] fields = buildSparkSession(info).sqlContext().table(table).schema().fields();
+    public Dataset<Row> getColumns(String table) {
+        StructField[] fields = buildSparkSession().sqlContext().table(table).schema().fields();
         List<Row> columns = new ArrayList<>();
         for (int i=0; i<fields.length; i++) {
             JdbcType jdbcType = JdbcUtils.getCommonJDBCType(fields[i].dataType()).get();
@@ -107,6 +113,6 @@ public class SparkService {
         listOfStructField.add(DataTypes.createStructField("TYPE_NAME", DataTypes.StringType, true));
 
         StructType structType=DataTypes.createStructType(listOfStructField);
-        return buildSparkSession(info).createDataFrame(columns, structType);
+        return buildSparkSession().createDataFrame(columns, structType);
     }
 }

@@ -50,7 +50,7 @@ public class SparkResultSet implements ResultSet {
     private int count = 0;
 
     protected SparkResultSet(ConnectionInfo connectionInfo, String sqlText) throws ParseException {
-        Dataset<Row> ds = new SparkService().executeQuery(connectionInfo, sqlText);
+        Dataset<Row> ds = new SparkService(connectionInfo).executeQuery(sqlText);
         resultSetMetaData = new SparkResultSetMetaData(ds.schema());
         count = (int)ds.count();
         this.dataListIterator = ds.toLocalIterator();
