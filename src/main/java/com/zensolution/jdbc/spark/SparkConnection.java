@@ -1,8 +1,13 @@
 package com.zensolution.jdbc.spark;
 
 import com.zensolution.jdbc.spark.internal.ConnectionInfo;
+import com.zensolution.jdbc.spark.internal.SupportedFormat;
 import org.apache.spark.sql.SparkSession;
+import org.ini4j.Ini;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -19,6 +24,7 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -55,7 +61,7 @@ public class SparkConnection implements Connection {
      *
      * @param path directory where the Parquet files are located
      */
-    protected SparkConnection(String path, Properties info) {
+    protected SparkConnection(String path, Properties info) throws SQLException {
         // validate argument(s)
         if (path == null || path.length() == 0) {
             throw new IllegalArgumentException("Unknown Path");
@@ -63,6 +69,7 @@ public class SparkConnection implements Connection {
         this.connectionInfo = new ConnectionInfo(path, info);
         this.info = info;
     }
+
 
     public ConnectionInfo getConnectionInfo() {
         return connectionInfo;
