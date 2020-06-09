@@ -1,5 +1,6 @@
 package com.zensolution.jdbc.spark.internal;
 
+import com.zensolution.jdbc.spark.provider.SparkConfProvider;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
@@ -13,11 +14,14 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,23 +33,29 @@ public class SparkService {
         this.connectionInfo = info;
     }
 
-    protected SparkSession buildSparkSession() {
+    protected SparkSession buildSparkSession() throws SQLException {
         final SparkSession.Builder builder = SparkSession.builder().master("local").appName("parquet-jdbc-driver")
                 .config("spark.sql.session.timeZone", "UTC");
-        getOptions(connectionInfo.getProperties(), "spark").entrySet().stream()
-                .filter(entry->entry.getKey().startsWith("spark."))
+        Map<String, String> options = getOptions(connectionInfo.getProperties(), "spark", true);
+
+        Optional<SparkConfProvider> sparkConfProvider = SparkConfProvider.getSparkConfProvider(connectionInfo);
+        if ( sparkConfProvider.isPresent() ) {
+            options.putAll(sparkConfProvider.get().getSparkConf(connectionInfo));
+        }
+
+        options.entrySet().stream()
                 .forEach(entry-> builder.config(entry.getKey(), entry.getValue()));
         return builder.getOrCreate();
     }
 
-    public Dataset<Row> executeQuery(String sqlText) throws ParseException {
+    public Dataset<Row> executeQuery(String sqlText) throws SQLException, ParseException {
         SparkSession spark = buildSparkSession();
         prepareTempView(sqlText);
         return spark.sql(sqlText);
     }
 
-    public void prepareTempView(String sqlText) throws ParseException {
-        Map<String, String> options = getOptions(connectionInfo.getProperties(), connectionInfo.getFormat().name());
+    public void prepareTempView(String sqlText) throws SQLException, ParseException {
+        Map<String, String> options = getOptions(connectionInfo.getProperties(), connectionInfo.getFormat().name(), false);
 
         SparkSession spark = buildSparkSession();
         Set<String> tables = getRelations(spark.sessionState().sqlParser().parsePlan(sqlText));
@@ -58,13 +68,13 @@ public class SparkService {
         });
     }
 
-    private Map<String, String> getOptions(Properties info, String prefix) {
+    private Map<String, String> getOptions(Properties info, String prefix, boolean keepPrefix) {
         return info.entrySet().stream()
                 .filter(e->e.getKey().toString().toLowerCase(Locale.getDefault())
                         .startsWith(prefix.toLowerCase(Locale.getDefault())+"."))
                 .collect(
                         Collectors.toMap(
-                                e -> e.getKey().toString().substring(prefix.length()+1),
+                                e -> keepPrefix? e.getKey().toString() : e.getKey().toString().substring(prefix.length()+1),
                                 e -> e.getValue().toString()
                         )
                 );
@@ -81,7 +91,7 @@ public class SparkService {
                 }).collect(Collectors.toSet());
     }
 
-    public Dataset<Row> getTables() {
+    public Dataset<Row> getTables() throws SQLException {
         List<Row> tables = Arrays.stream(buildSparkSession().sqlContext().tableNames())
                 .map(table->RowFactory.create(table, "", "", ""))
                 .collect(Collectors.toList());
@@ -96,7 +106,7 @@ public class SparkService {
         return buildSparkSession().createDataFrame(tables, structType);
     }
 
-    public Dataset<Row> getColumns(String table) {
+    public Dataset<Row> getColumns(String table) throws SQLException {
         StructField[] fields = buildSparkSession().sqlContext().table(table).schema().fields();
         List<Row> columns = new ArrayList<>();
         for (int i=0; i<fields.length; i++) {
