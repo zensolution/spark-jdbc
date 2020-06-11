@@ -45,6 +45,12 @@ public class SparkResultSet implements ResultSet {
      */
     private SparkResultSetMetaData resultSetMetaData;
 
+    /**
+     * True if the last obtained column value was SQL NULL as specified by {@link #wasNull}. The value
+     * is always updated by the method.
+     */
+    protected boolean wasNullFlag = false;
+
     private Iterator<Row> dataListIterator;
     private Row current;
     private int count = 0;
@@ -83,67 +89,81 @@ public class SparkResultSet implements ResultSet {
 
     @Override
     public boolean wasNull() throws SQLException {
-        return false;
+        return wasNullFlag;
+    }
+
+    private void checkNull(int columnIndex) {
+        wasNullFlag = current.isNullAt(columnIndex-1);
     }
 
     @Override
     public String getString(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getString(columnIndex-1);
     }
 
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getBoolean(columnIndex-1);
     }
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getByte(columnIndex-1);
     }
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getShort(columnIndex-1);
     }
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
         checkOpen();
-        return current.getInt(columnIndex-1);
+        checkNull(columnIndex);
+        return current.isNullAt(columnIndex-1) ? 0 : current.getInt(columnIndex-1);
     }
 
     @Override
     public long getLong(int columnIndex) throws SQLException {
         checkOpen();
-        return current.getLong(columnIndex-1);
+        checkNull(columnIndex);
+        return current.isNullAt(columnIndex-1) ? 0 : current.getLong(columnIndex-1);
     }
 
     @Override
     public float getFloat(int columnIndex) throws SQLException {
         checkOpen();
-        return current.getFloat(columnIndex-1);
+        checkNull(columnIndex);
+        return current.isNullAt(columnIndex-1) ? 0 : current.getFloat(columnIndex-1);
     }
 
     @Override
     public double getDouble(int columnIndex) throws SQLException {
         checkOpen();
-        return current.getDouble(columnIndex-1);
+        checkNull(columnIndex);
+        return current.isNullAt(columnIndex-1) ? 0 : current.getDouble(columnIndex-1);
     }
 
     @Override
     @Deprecated
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getDecimal(columnIndex-1).setScale(scale);
     }
 
     @Override
     public byte[] getBytes(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         String s = getString(columnIndex);
         if (s != null) {
             return s.getBytes(Charset.defaultCharset());
@@ -154,6 +174,7 @@ public class SparkResultSet implements ResultSet {
     @Override
     public Date getDate(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getDate(columnIndex-1);
     }
 
@@ -165,11 +186,13 @@ public class SparkResultSet implements ResultSet {
     @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getTimestamp(columnIndex-1);
     }
 
     @Override
     public InputStream getAsciiStream(int columnIndex) throws SQLException {
+        checkNull(columnIndex);
         String s = getString(columnIndex);
         if (s != null) {
             return parseAsciiStream(s);
