@@ -49,8 +49,8 @@ public class SparkResultSet implements ResultSet {
     private Row current;
     private int count = 0;
 
-    protected SparkResultSet(ConnectionInfo connectionInfo, String sqlText) throws SQLException, ParseException {
-        Dataset<Row> ds = new SparkService(connectionInfo).executeQuery(sqlText);
+    protected SparkResultSet(ConnectionInfo connectionInfo, String sqlText, SparkService sparkService) throws SQLException, ParseException {
+        Dataset<Row> ds = sparkService.executeQuery(sqlText);
         resultSetMetaData = new SparkResultSetMetaData(ds.schema());
         count = (int)ds.count();
         this.dataListIterator = ds.toLocalIterator();

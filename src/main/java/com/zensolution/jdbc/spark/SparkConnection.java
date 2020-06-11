@@ -1,13 +1,8 @@
 package com.zensolution.jdbc.spark;
 
 import com.zensolution.jdbc.spark.internal.ConnectionInfo;
-import com.zensolution.jdbc.spark.internal.SupportedFormat;
-import org.apache.spark.sql.SparkSession;
-import org.ini4j.Ini;
+import com.zensolution.jdbc.spark.internal.SparkService;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -24,7 +19,6 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -42,14 +36,14 @@ public class SparkConnection implements Connection {
     private Properties info;
 
     /**
-     * the default spark session
-     */
-    private SparkSession spark;
-
-    /**
      * Stores whether this Connection is closed or not
      */
     private boolean closed = false;
+
+    /*
+     *  Unified interface to access spark
+     */
+    private SparkService sparkService;
 
     /**
      * Collection of all created Statements
@@ -68,6 +62,7 @@ public class SparkConnection implements Connection {
         }
         this.connectionInfo = new ConnectionInfo(path, info);
         this.info = info;
+        this.sparkService = new SparkService(connectionInfo);
     }
 
 
@@ -79,7 +74,7 @@ public class SparkConnection implements Connection {
     public Statement createStatement() throws SQLException {
         checkOpen();
 
-        SparkStatement statement = new SparkStatement(this);
+        SparkStatement statement = new SparkStatement(this, sparkService);
         statements.add(statement);
         return statement;
     }
@@ -122,7 +117,6 @@ public class SparkConnection implements Connection {
     @Override
     public void close() throws SQLException {
         if ( !this.closed ) {
-            this.spark.close();
             this.closed = true;
         }
     }
@@ -134,7 +128,7 @@ public class SparkConnection implements Connection {
 
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {
-        return new SparkDatabaseMetaData(this);
+        return new SparkDatabaseMetaData(this, this.sparkService);
     }
 
     @Override
