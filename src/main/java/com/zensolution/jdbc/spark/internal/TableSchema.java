@@ -1,5 +1,7 @@
 package com.zensolution.jdbc.spark.internal;
 
+import java.util.Objects;
+
 public class TableSchema {
     private String path;
     private String table;
@@ -18,7 +20,16 @@ public class TableSchema {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TableSchema that = (TableSchema) o;
+        return Objects.equals(path, that.path) &&
+                Objects.equals(table, that.table);
+    }
+
+    @Override
     public int hashCode() {
-        return String.format("%s-%s", path, table).hashCode();
+        return Objects.hash(path, table);
     }
 }
