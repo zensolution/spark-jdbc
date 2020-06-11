@@ -3,7 +3,6 @@ package com.zensolution.jdbc.spark;
 import com.zensolution.jdbc.spark.internal.SparkService;
 import com.zensolution.jdbc.spark.internal.Versions;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -15,8 +14,8 @@ public class SparkDatabaseMetaData implements DatabaseMetaData {
     private SparkService sparkService;
     private SparkConnection connection;
 
-    public SparkDatabaseMetaData(SparkConnection connection) {
-        sparkService = new SparkService(connection.getConnectionInfo());
+    public SparkDatabaseMetaData(SparkConnection connection, SparkService sparkService) {
+        this.sparkService = sparkService;
         this.connection = connection;
     }
 

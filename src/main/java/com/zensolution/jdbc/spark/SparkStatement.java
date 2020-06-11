@@ -1,5 +1,6 @@
 package com.zensolution.jdbc.spark;
 
+import com.zensolution.jdbc.spark.internal.SparkService;
 import org.apache.spark.sql.catalyst.parser.ParseException;
 
 import java.sql.Connection;
@@ -15,21 +16,23 @@ public class SparkStatement implements Statement {
     private static final Logger LOGGER = Logger.getLogger("com.nyiso.qa.emsbms.jdbc.spark.SparkDriver");
 
     private SparkConnection connection;
+    private SparkService sparkService;
     private int fetchSize = 1;
     private int fetchDirection = ResultSet.FETCH_FORWARD;
     private int maxRows = 0;
     private boolean closed;
     private SparkResultSet resultSet;
 
-    protected SparkStatement(SparkConnection connection) {
+    protected SparkStatement(SparkConnection connection, SparkService sparkService) {
         LOGGER.log(Level.FINE, "SparkDriver:connect() - connection=" + connection);
         this.connection = connection;
+        this.sparkService = sparkService;
     }
 
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
         try {
-            resultSet = new SparkResultSet(connection.getConnectionInfo(), sql);
+            resultSet = new SparkResultSet(connection.getConnectionInfo(), sql, sparkService);
             return resultSet;
         } catch (Exception e) {
             throw new SQLException(e);
@@ -105,7 +108,7 @@ public class SparkStatement implements Statement {
     @Override
     public boolean execute(String sql) throws SQLException {
         try {
-            resultSet = new SparkResultSet(connection.getConnectionInfo(), sql);
+            resultSet = new SparkResultSet(connection.getConnectionInfo(), sql, sparkService);
         } catch (ParseException e) {
             throw new SQLException(e);
         }
