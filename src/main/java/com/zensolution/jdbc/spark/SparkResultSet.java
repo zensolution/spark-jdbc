@@ -333,12 +333,12 @@ public class SparkResultSet implements ResultSet {
     @Override
     public Object getObject(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.get(columnIndex-1);
     }
 
     @Override
     public Object getObject(String columnLabel) throws SQLException {
-        checkOpen();
         return getObject(findColumn(columnLabel));
     }
 
@@ -360,6 +360,7 @@ public class SparkResultSet implements ResultSet {
     @Override
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
         checkOpen();
+        checkNull(columnIndex);
         return current.getDecimal(columnIndex-1);
     }
 
