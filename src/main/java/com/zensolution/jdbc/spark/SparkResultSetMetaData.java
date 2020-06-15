@@ -1,15 +1,15 @@
 package com.zensolution.jdbc.spark;
 
+import com.zensolution.jdbc.spark.jdbc.AbstractJdbcResultSetMetaData;
 import org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SparkResultSetMetaData implements ResultSetMetaData {
+public class SparkResultSetMetaData extends AbstractJdbcResultSetMetaData {
 
     private List<StructField> structFields = new ArrayList<>();
 
@@ -83,25 +83,12 @@ public class SparkResultSetMetaData implements ResultSetMetaData {
         return "";
     }
 
-    @Override
-    public int getPrecision(int column) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public int getScale(int column) throws SQLException {
         return 0;
     }
 
-    @Override
-    public String getTableName(int column) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getCatalogName(int column) throws SQLException {
-        return "";
-    }
 
     @Override
     public int getColumnType(int column) throws SQLException {

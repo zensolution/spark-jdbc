@@ -1,6 +1,7 @@
 package com.zensolution.jdbc.spark;
 
 import com.zensolution.jdbc.spark.internal.SparkService;
+import com.zensolution.jdbc.spark.jdbc.AbstractJdbcStatement;
 import org.apache.spark.sql.catalyst.parser.ParseException;
 
 import java.sql.Connection;
@@ -11,7 +12,7 @@ import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SparkStatement implements Statement {
+public class SparkStatement extends AbstractJdbcStatement {
 
     private static final Logger LOGGER = Logger.getLogger("com.nyiso.qa.emsbms.jdbc.spark.SparkDriver");
 
@@ -45,21 +46,6 @@ public class SparkStatement implements Statement {
     }
 
     @Override
-    public void close() throws SQLException {
-        //TODO
-    }
-
-    @Override
-    public int getMaxFieldSize() throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setMaxFieldSize(int max) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public int getMaxRows() throws SQLException {
         return maxRows;
     }
@@ -68,41 +54,6 @@ public class SparkStatement implements Statement {
     public void setMaxRows(int max) throws SQLException {
         checkOpen();
         maxRows = max;
-    }
-
-    @Override
-    public void setEscapeProcessing(boolean enable) throws SQLException {
-
-    }
-
-    @Override
-    public int getQueryTimeout() throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setQueryTimeout(int seconds) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void cancel() throws SQLException {
-
-    }
-
-    @Override
-    public SQLWarning getWarnings() throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clearWarnings() throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setCursorName(String name) throws SQLException {
-        throw new UnsupportedOperationException();
     }
 
     @Override
