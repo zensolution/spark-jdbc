@@ -73,6 +73,7 @@ public class SparkConnection extends AbstractJdbcConnection {
     @Override
     public void close() throws SQLException {
         if ( !this.closed ) {
+            sparkService.close();
             this.closed = true;
         }
     }

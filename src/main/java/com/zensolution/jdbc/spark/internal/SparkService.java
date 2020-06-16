@@ -36,8 +36,7 @@ public class SparkService {
     }
 
     private SparkSession buildSparkSession() throws SQLException {
-        final SparkSession.Builder builder = SparkSession.builder().master("local").appName("parquet-jdbc-driver")
-                .config("spark.sql.session.timeZone", "UTC");
+        final SparkSession.Builder builder = SparkSession.builder().master("local").appName("parquet-jdbc-driver");
         Map<String, String> options = getOptions(connectionInfo.getProperties(), "spark", true);
 
         Optional<SparkConfProvider> sparkConfProvider = SparkConfProvider.getSparkConfProvider(connectionInfo);
@@ -48,6 +47,10 @@ public class SparkService {
                 .forEach(entry-> builder.config(entry.getKey(), entry.getValue()));
 
         return builder.getOrCreate().newSession();
+    }
+
+    public void close() {
+        this.spark.close();
     }
 
     public Dataset<Row> executeQuery(String sqlText) throws SQLException, ParseException {
