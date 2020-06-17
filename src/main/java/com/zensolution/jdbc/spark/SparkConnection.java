@@ -3,6 +3,8 @@ package com.zensolution.jdbc.spark;
 import com.zensolution.jdbc.spark.internal.ConnectionInfo;
 import com.zensolution.jdbc.spark.internal.SparkService;
 import com.zensolution.jdbc.spark.jdbc.AbstractJdbcConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -12,6 +14,9 @@ import java.util.List;
 import java.util.Properties;
 
 public class SparkConnection extends AbstractJdbcConnection {
+
+    private static final Logger logger = LoggerFactory.getLogger(SparkConnection.class);
+
     /**
      * Directory where the Parquet files to use are located
      */
@@ -50,6 +55,7 @@ public class SparkConnection extends AbstractJdbcConnection {
         this.connectionInfo = new ConnectionInfo(path, info);
         this.info = info;
         this.sparkService = new SparkService(connectionInfo);
+        logger.info("SparkConnection - path="+path+" info-"+info);
     }
 
 
@@ -60,8 +66,8 @@ public class SparkConnection extends AbstractJdbcConnection {
     @Override
     public Statement createStatement() throws SQLException {
         checkOpen();
-
         SparkStatement statement = new SparkStatement(this, sparkService);
+        logger.info("SparkConnection:createStatement()");
         statements.add(statement);
         return statement;
     }
@@ -106,6 +112,7 @@ public class SparkConnection extends AbstractJdbcConnection {
 
     @Override
     public DatabaseMetaData getMetaData() throws SQLException {
+        logger.info("SparkConnection-getMetaData()");
         return new SparkDatabaseMetaData(this, this.sparkService);
     }
 

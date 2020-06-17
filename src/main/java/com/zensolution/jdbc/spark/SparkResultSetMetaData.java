@@ -2,14 +2,19 @@ package com.zensolution.jdbc.spark;
 
 import com.zensolution.jdbc.spark.jdbc.AbstractJdbcResultSetMetaData;
 import org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils;
+import org.apache.spark.sql.types.DecimalType;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SparkResultSetMetaData extends AbstractJdbcResultSetMetaData {
+
+    private static final Logger logger = LoggerFactory.getLogger(SparkResultSet.class);
 
     private List<StructField> structFields = new ArrayList<>();
 
@@ -40,12 +45,12 @@ public class SparkResultSetMetaData extends AbstractJdbcResultSetMetaData {
 
     @Override
     public boolean isCaseSensitive(int column) throws SQLException {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isSearchable(int column) throws SQLException {
-        return false;
+        return true;
     }
 
     @Override
@@ -65,7 +70,12 @@ public class SparkResultSetMetaData extends AbstractJdbcResultSetMetaData {
 
     @Override
     public int getColumnDisplaySize(int column) throws SQLException {
-        return 20;
+        StructField structField = this.structFields.get(column-1);
+        if ( structField.dataType() instanceof DecimalType ) {
+            return ((DecimalType)structField.dataType()).precision();
+        } else {
+            return this.structFields.get(column-1).dataType().defaultSize();
+        }
     }
 
     @Override
@@ -86,9 +96,17 @@ public class SparkResultSetMetaData extends AbstractJdbcResultSetMetaData {
 
     @Override
     public int getScale(int column) throws SQLException {
-        return 0;
+        StructField structField = this.structFields.get(column-1);
+        if ( structField.dataType() instanceof DecimalType ) {
+            return ((DecimalType) structField.dataType()).scale();
+        } else {
+            return 0;
+        }
     }
 
+    public StructField getStructField(int column) {
+        return this.structFields.get(column-1);
+    }
 
     @Override
     public int getColumnType(int column) throws SQLException {
@@ -97,7 +115,7 @@ public class SparkResultSetMetaData extends AbstractJdbcResultSetMetaData {
 
     @Override
     public String getColumnTypeName(int column) throws SQLException {
-        return null;
+        return this.structFields.get(column-1).dataType().typeName();
     }
 
     @Override

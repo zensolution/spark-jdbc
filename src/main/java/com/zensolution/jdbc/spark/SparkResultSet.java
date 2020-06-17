@@ -6,6 +6,9 @@ import com.zensolution.jdbc.spark.jdbc.AbstractJdbcResultSet;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.ParseException;
+import org.apache.spark.sql.types.ShortType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -23,11 +26,16 @@ import java.util.Iterator;
 
 public class SparkResultSet extends AbstractJdbcResultSet {
 
+    private static final Logger logger = LoggerFactory.getLogger(SparkResultSet.class);
+
     /**
      * Result of last call to next()
      */
     private boolean nextResult = true;
 
+    /**
+     * Stores whether this Resultset is closed or not
+     */
     private boolean isClosed = false;
 
     /**
@@ -46,6 +54,7 @@ public class SparkResultSet extends AbstractJdbcResultSet {
     private int count = 0;
 
     protected SparkResultSet(ConnectionInfo connectionInfo, String sqlText, SparkService sparkService) throws SQLException, ParseException {
+        logger.info("SparkResultSet - sqlText:" + sqlText);
         Dataset<Row> ds = sparkService.executeQuery(sqlText);
         resultSetMetaData = new SparkResultSetMetaData(ds.schema());
         count = (int)ds.count();
@@ -80,6 +89,7 @@ public class SparkResultSet extends AbstractJdbcResultSet {
 
     @Override
     public boolean wasNull() throws SQLException {
+        checkOpen();
         return wasNullFlag;
     }
 
@@ -119,7 +129,14 @@ public class SparkResultSet extends AbstractJdbcResultSet {
     public int getInt(int columnIndex) throws SQLException {
         checkOpen();
         checkNull(columnIndex);
-        return current.isNullAt(columnIndex-1) ? 0 : current.getInt(columnIndex-1);
+
+        if ( current.isNullAt(columnIndex-1) ) {
+            return 0;
+        } else if ( resultSetMetaData.getStructField(columnIndex).dataType() instanceof ShortType) {
+            return new Short(current.getShort(columnIndex-1)).intValue();
+        } else {
+            return current.getInt(columnIndex-1);
+        }
     }
 
     @Override

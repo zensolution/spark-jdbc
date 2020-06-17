@@ -3,11 +3,15 @@ package com.zensolution.jdbc.spark;
 import com.zensolution.jdbc.spark.internal.SparkService;
 import com.zensolution.jdbc.spark.internal.Versions;
 import com.zensolution.jdbc.spark.jdbc.AbstractJdbcDatabaseMetaData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SparkDatabaseMetaData extends AbstractJdbcDatabaseMetaData {
+
+    private static final Logger logger = LoggerFactory.getLogger(SparkDatabaseMetaData.class);
 
     private SparkService sparkService;
     private SparkConnection connection;
@@ -52,13 +56,22 @@ public class SparkDatabaseMetaData extends AbstractJdbcDatabaseMetaData {
         return Versions.Minor;
     }
 
+    /*
+     * All parameters are ignored for now.
+     */
     @Override
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String[] types) throws SQLException {
+        logger.info("SparkDatabaseMetaData:getTables() - tableNamePattern="+tableNamePattern);
         return new SparkResultSet(sparkService.getTables());
     }
 
+
+    /*
+     * All parameters are ignored for now.
+     */
     @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
+        logger.info("SparkDatabaseMetaData:getColumns() - columnNamePattern="+columnNamePattern);
         return new SparkResultSet(sparkService.getColumns(tableNamePattern));
     }
 

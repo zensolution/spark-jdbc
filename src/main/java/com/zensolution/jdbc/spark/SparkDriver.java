@@ -11,12 +11,12 @@ import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SparkDriver implements Driver {
 
-    private static final Logger LOGGER = Logger.getLogger("com.zensolution.jdbc.spark");
+    private static final Logger logger = LoggerFactory.getLogger(SparkDriver.class);
 
     public final static String URL_PREFIX = "com.zensolution.jdbc.spark:";
 
@@ -24,7 +24,7 @@ public class SparkDriver implements Driver {
         try {
             register();
         } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Unable to register com.zensolution.jdbc.spark JDBC driver", e);
+            logger.error("Unable to register com.zensolution.jdbc.spark JDBC driver", e);
         }
     }
 
@@ -49,7 +49,7 @@ public class SparkDriver implements Driver {
             Properties prop = parseUrlIno(urlProperties.substring(questionIndex+1));
             info.putAll(prop);
         }
-        LOGGER.log(Level.FINE, "SparkDriver:connect() - Path=" + path);
+        logger.info("SparkDriver:connect() - Path=" + path);
         return new SparkConnection(path, info);
     }
 
@@ -75,7 +75,7 @@ public class SparkDriver implements Driver {
 
     @Override
     public boolean acceptsURL(String url) throws SQLException {
-        LOGGER.log(Level.FINE, "SparkDriver:accept() - url=" + url);
+        logger.info("SparkDriver:accept() - url=" + url);
         return url.startsWith(URL_PREFIX);
     }
 
@@ -101,8 +101,8 @@ public class SparkDriver implements Driver {
     }
 
     @Override
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        return Logger.getLogger(getClass().getPackage().getName());
+    public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        return java.util.logging.Logger.getLogger(getClass().getPackage().getName());
     }
 
 }

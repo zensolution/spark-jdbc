@@ -15,6 +15,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -36,7 +37,9 @@ public class SparkService {
     }
 
     private SparkSession buildSparkSession() throws SQLException {
-        final SparkSession.Builder builder = SparkSession.builder().master("local").appName("parquet-jdbc-driver");
+        final SparkSession.Builder builder = SparkSession.builder()
+                .master("local")
+                .appName("spark-jdbc-driver-"+ Instant.now().toString());
         Map<String, String> options = getOptions(connectionInfo.getProperties(), "spark", true);
 
         Optional<SparkConfProvider> sparkConfProvider = SparkConfProvider.getSparkConfProvider(connectionInfo);
