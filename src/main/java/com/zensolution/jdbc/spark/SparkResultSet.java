@@ -108,21 +108,21 @@ public class SparkResultSet extends AbstractJdbcResultSet {
     public boolean getBoolean(int columnIndex) throws SQLException {
         checkOpen();
         checkNull(columnIndex);
-        return current.getBoolean(columnIndex-1);
+        return current.isNullAt(columnIndex-1) ? false : current.getBoolean(columnIndex-1);
     }
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
         checkOpen();
         checkNull(columnIndex);
-        return current.getByte(columnIndex-1);
+        return current.isNullAt(columnIndex-1) ? 0 : current.getByte(columnIndex-1);
     }
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
         checkOpen();
         checkNull(columnIndex);
-        return current.getShort(columnIndex-1);
+        return current.isNullAt(columnIndex-1) ? 0 : current.getShort(columnIndex-1);
     }
 
     @Override
